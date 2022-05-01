@@ -4,6 +4,7 @@
 // instead of the target type itself.
 // You can read more about it at https://doc.rust-lang.org/std/convert/trait.TryFrom.html
 use std::convert::{TryFrom, TryInto};
+use std::ops::RangeInclusive;
 
 #[derive(Debug, PartialEq)]
 struct Color {
@@ -21,8 +22,6 @@ enum IntoColorError {
     IntConversion,
 }
 
-// I AM NOT DONE
-
 // Your task is to complete this implementation
 // and return an Ok result of inner type Color.
 // You need to create an implementation for a tuple of three integers,
@@ -32,10 +31,21 @@ enum IntoColorError {
 // but the slice implementation needs to check the slice length!
 // Also note that correct RGB color values must be integers in the 0..=255 range.
 
+static COLOR_RANGE: RangeInclusive<i16> = 0..=255;
+
 // Tuple implementation
+fn create_color_object(red: i16, green: i16, blue: i16) -> Result<Color, IntoColorError> {
+    if COLOR_RANGE.contains(&red) && COLOR_RANGE.contains(&blue) && COLOR_RANGE.contains(&green) {
+        Ok(Color {red: red as u8, green: green as u8, blue: blue as u8})
+    } else {
+        Err(IntoColorError::IntConversion)
+    }
+}
+
 impl TryFrom<(i16, i16, i16)> for Color {
     type Error = IntoColorError;
     fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {
+        create_color_object(tuple.0, tuple.1, tuple.2)
     }
 }
 
@@ -43,6 +53,7 @@ impl TryFrom<(i16, i16, i16)> for Color {
 impl TryFrom<[i16; 3]> for Color {
     type Error = IntoColorError;
     fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {
+        create_color_object(arr[0], arr[1], arr[2])
     }
 }
 
@@ -50,6 +61,11 @@ impl TryFrom<[i16; 3]> for Color {
 impl TryFrom<&[i16]> for Color {
     type Error = IntoColorError;
     fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {
+        if slice.len() == 3 {
+            create_color_object(slice[0], slice[1], slice[2])
+        } else {
+            Err(IntoColorError::BadLen)
+        }
     }
 }
 
